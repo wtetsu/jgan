@@ -126,6 +126,8 @@ test("", () => {
   {
     const tokens = tokenize("aaaa");
     expect(1).toEqual(tokens.length);
+
+    if (tokens[0].kind !== "raw_text") throw Error();
     expect("raw_text").toEqual(tokens[0].kind);
     expect("aaaa").toEqual(tokens[0].text);
   }
@@ -133,10 +135,16 @@ test("", () => {
   {
     const tokens = tokenize("aaaa{{name}}bbbb");
     expect(3).toEqual(tokens.length);
+
+    if (tokens[0].kind !== "raw_text") throw Error();
     expect("raw_text").toEqual(tokens[0].kind);
     expect("aaaa").toEqual(tokens[0].text);
+
+    if (tokens[1].kind !== "variable") throw Error();
     expect("variable").toEqual(tokens[1].kind);
     expect("name").toEqual(tokens[1].id);
+
+    if (tokens[2].kind !== "raw_text") throw Error();
     expect("raw_text").toEqual(tokens[2].kind);
     expect("bbbb").toEqual(tokens[2].text);
   }
