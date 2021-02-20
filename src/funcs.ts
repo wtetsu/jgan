@@ -84,7 +84,11 @@ class Template {
         if (value === null || value === undefined) {
           continue;
         }
-        result += value;
+        if (node.escape) {
+          result += escapeHtml(value.toString());
+        } else {
+          result += value.toString();
+        }
         continue;
       }
     }
@@ -132,10 +136,12 @@ type Token =
       escape: boolean;
     }
   | {
-      kind: "open1";
+      kind: "open_condition";
+      id: string;
     }
   | {
-      kind: "open2";
+      kind: "close_condition";
+      id: string;
     };
 
 type TokenKind = Token["kind"];
@@ -156,19 +162,31 @@ export const tokenize = (template: string): Token[] => {
     return closeTokenIndex >= 0 ? closeTokenIndex : -1;
   };
 
-  const captureToken = (close: string) => {
+  const captureToken = (open: string, close: string) => {
     const closeIndex = find(close);
     if (closeIndex < 0) {
       throw new Error(template);
     }
-    const id = template.substring(index + close.length, closeIndex);
+    const id = template.substring(index + open.length, closeIndex);
     const next = closeIndex + close.length;
     return { id, next };
   };
 
-  const captureVariableToken = (close: string, escape: boolean): Capture => {
-    const r = captureToken(close);
+  const captureVariableToken = (open: string, close: string, escape: boolean): Capture => {
+    const r = captureToken(open, close);
     const token: Token = { kind: "variable", id: r.id, escape };
+    return { next: r.next, token };
+  };
+
+  const captureOpenConditionToken = (open: string, close: string): Capture => {
+    const r = captureToken(open, close);
+    const token: Token = { kind: "open_condition", id: r.id };
+    return { next: r.next, token };
+  };
+
+  const captureCloseConditionToken = (open: string, close: string): Capture => {
+    const r = captureToken(open, close);
+    const token: Token = { kind: "close_condition", id: r.id };
     return { next: r.next, token };
   };
 
@@ -194,13 +212,19 @@ export const tokenize = (template: string): Token[] => {
     }
 
     if (beginWith("{{{")) {
-      const r = captureVariableToken("}}}", false);
+      const r = captureVariableToken("{{{", "}}}", false);
       tokens.push(r.token);
       index = r.next;
     } else if (beginWith("{{#")) {
-      //
+      const r = captureOpenConditionToken("{{#", "}}");
+      tokens.push(r.token);
+      index = r.next;
+    } else if (beginWith("{{/")) {
+      const r = captureCloseConditionToken("{{/", "}}");
+      tokens.push(r.token);
+      index = r.next;
     } else if (beginWith("{{")) {
-      const r = captureVariableToken("}}", true);
+      const r = captureVariableToken("{{", "}}", true);
       tokens.push(r.token);
       index = r.next;
     } else {
@@ -209,4 +233,17 @@ export const tokenize = (template: string): Token[] => {
   }
 
   return tokens;
+};
+
+const mapForEscapeHtml: Record<string, string> = {
+  "&": "&amp;",
+  "<": "&lt;",
+  ">": "&gt;",
+  '"': "&quot;",
+};
+
+const reForEscapeHtml = /&|<|>|"/g;
+
+const escapeHtml = (str: string) => {
+  return str.replace(reForEscapeHtml, (ch: string) => mapForEscapeHtml[ch]);
 };
