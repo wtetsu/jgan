@@ -7,7 +7,7 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc",
+    "b": "tsdx build",
     "r": "rimraf dist/ && tsdx build --name jgan --format esm,cjs,umd",
     "prepublishOnly": "npm run build",
     "lint": "eslint src/**/*.{js,ts,tsx} && prettier --check src/**/*.{js,ts,tsx}",
@@ -16,14 +16,9 @@
     "test-watch": "jest --watch",
     "test-cov": "npm test -- --coverage"
   },
-  "dependencies": {
-    "dayjs": "^1.10.4",
-    "hogan.js": "^3.0.2"
-  },
   "devDependencies": {
     "@babel/core": "^7.12.17",
     "@babel/node": "^7.12.17",
-    "@types/hogan.js": "^3.0.0",
     "@types/jest": "^26.0.20",
     "cross-env": "^7.0.3",
     "jest": "^26.6.3",

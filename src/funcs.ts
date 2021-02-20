@@ -1,106 +1,125 @@
 // import { Template } from "hogan.js";
 
 // import dayjs from "dayjs";
-import Hogan from "hogan.js";
+// import Hogan from "hogan.js";
 
 export function sayHello() {
-  console.log("hi");
-  return "hi";
+  // console.log("hi");
+  return "hi!";
 }
 export function sayGoodbye() {
-  console.log("goodbye");
-  return "goodbye";
+  // console.log("goodbye");
+  return "goodbye!";
 }
 
-export function hogan(template: string) {
-  // return dayjs().toDate();
-  return Hogan.compile(template);
+export function sayGoodbye2() {
+  // console.log("goodbye");
+  return "goodbye!!!";
 }
 
 export function compile(template: string): Template {
-  //
-  return new Template();
+  const tokens = tokenize(template);
+  const nodes = parse(tokens);
+  return new Template(nodes);
 }
 
-export const tokenize = (template: string): Token[] => {
+const parse = (tokens: Token[]): Node[] => {
   let index = 0;
-  const beginWith = (tokenString: string): boolean => {
-    return template.substring(index, index + tokenString.length) === tokenString;
-  };
+  // let currentNode: Node;
 
-  const find = (tokenString: string) => {
-    const closeTokenIndex = template.indexOf(tokenString, index);
-    return closeTokenIndex >= 0 ? closeTokenIndex : -1;
-  };
+  const nodes: Node[] = [];
 
-  const tokens: Token[] = [];
+  // const consume = (tokenKind: TokenKind) => {
+  //   if (tokens[index].kind !== tokenKind) {
+  //     return false;
+  //   }
 
-  // let processedIndex = 0;
+  //   return false;
+  // };
 
-  for (let i = 0; i < 10; i++) {
-    if (index >= template.length) {
+  for (;;) {
+    if (index >= tokens.length) {
       break;
     }
 
-    const nextIndex = find("{{");
-    // console.warn(`${template}: ${nextIndex} ${index} ${template.substring(index)}`);
-    // console.warn(template.substring(index, index + 2) === "{{");
-    // console.warn(beginWith("{{"));
+    const currentToken = tokens[index];
 
-    if (nextIndex >= 0) {
-      if (nextIndex > index) {
-        const text = template.substring(index, nextIndex);
-        tokens.push({ kind: "raw_text", text });
-        index = nextIndex;
-      }
-    } else {
-      const text = template.substring(index);
-      tokens.push({ kind: "raw_text", text });
-      break;
+    if (currentToken.kind === "raw_text") {
+      const newNode = newRawTextNode(currentToken.text);
+      nodes.push(newNode);
+      index++;
+      continue;
     }
-
-    if (beginWith("{{{")) {
-      const closeIndex = find("}}}");
-      const id = template.substring(index + 3, closeIndex);
-      tokens.push({ kind: "variable", id, escape: false });
-      index = closeIndex + 3;
-    } else if (beginWith("{{")) {
-      const closeIndex = find("}}");
-      const id = template.substring(index + 2, closeIndex);
-      tokens.push({ kind: "variable", id, escape: true });
-      index = closeIndex + 2;
-    } else {
-      // console.warn("@@@@@@@@@@@@@@@@@");
+    if (currentToken.kind === "variable") {
+      const newNode = newVariableNode(currentToken.id, currentToken.escape);
+      nodes.push(newNode);
+      index++;
+      continue;
     }
+    throw Error();
   }
 
-  return tokens;
+  return nodes;
 };
 
-// class Tokenizer {
-//   private readonly template: string;
+class Template {
+  private readonly nodes: Node[];
+  constructor(nodes: Node[]) {
+    this.nodes = nodes;
+  }
 
-//   constructor(template: string) {
-//     this.template = template;
-//   }
+  render(data: Record<string, any>): string {
+    let result = "";
 
-//   run(): Token[] {
-//     const tokens: Token[] = [];
+    for (let i = 0; i < this.nodes.length; i++) {
+      const node = this.nodes[i];
 
-//     let index = 0;
-//     for (;;) {
-//       if (this.consume("{{{")) {
-//       } else if (this.consume("{{{")) {
-//       } else if (this.consume("{{{")) {
-//       }
-//     }
-//     return tokens;
-//   }
+      if (node.kind === "raw_text") {
+        result += node.text;
+        continue;
+      }
 
-//   consume(text: string): boolean {
+      if (node.kind === "variable") {
+        const value = data[node.id];
+        if (value === null || value === undefined) {
+          continue;
+        }
+        result += value;
+        continue;
+      }
+    }
 
-//   }
-// }
+    return result;
+  }
+}
+
+const newRawTextNode = (text: string): Node => {
+  return {
+    kind: "raw_text",
+    text,
+  };
+};
+
+const newVariableNode = (id: string, escape: boolean): Node => {
+  return {
+    kind: "variable",
+    id,
+    escape,
+  };
+};
+
+type Node =
+  | {
+      kind: "raw_text";
+      text: string;
+    }
+  | {
+      kind: "variable";
+      id: string;
+      escape: boolean;
+    };
+
+// type NodeKind = Node["kind"];
 
 type Token =
   | {
@@ -119,44 +138,54 @@ type Token =
       kind: "open2";
     };
 
-// const parse = (template: string) => {
-//   let index = 0;
-//   for (;;) {
-//     const ch = template[index];
+// type TokenKind = Token["kind"];
 
-//     if (ch === "{") {
-//       let insideIndex;
-//       let closeToken;
-//       if (template.substring(index, index + 3) === "{{{") {
-//         insideIndex = index + 3;
-//         closeToken = "}}}";
-//       } else if (template.substring(index, index + 2) === "{{") {
-//         insideIndex = index + 2;
-//         closeToken = "}}";
-//       }
+export const tokenize = (template: string): Token[] => {
+  let index = 0;
+  const beginWith = (tokenString: string): boolean => {
+    return template.substring(index, index + tokenString.length) === tokenString;
+  };
 
-//       if (closeToken) {
-//         const closeIndex = findCloseToken(template, index, closeToken);
+  const find = (tokenString: string) => {
+    const closeTokenIndex = template.indexOf(tokenString, index);
+    return closeTokenIndex >= 0 ? closeTokenIndex : -1;
+  };
 
-//         const inner = template.substring(insideIndex, closeIndex);
-//       } else {
-//         throw Error(`${closeToken} not found`);
-//       }
-//     }
-//   }
-// };
+  const tokens: Token[] = [];
 
-class Template {
-  render(): string {
-    return "";
+  for (let i = 0; i < 10; i++) {
+    if (index >= template.length) {
+      break;
+    }
+
+    const nextIndex = find("{{");
+
+    if (nextIndex < 0) {
+      const text = template.substring(index);
+      tokens.push({ kind: "raw_text", text });
+      break;
+    }
+
+    if (nextIndex > index) {
+      const text = template.substring(index, nextIndex);
+      tokens.push({ kind: "raw_text", text });
+      index = nextIndex;
+    }
+
+    if (beginWith("{{{")) {
+      const closeIndex = find("}}}");
+      const id = template.substring(index + 3, closeIndex);
+      tokens.push({ kind: "variable", id, escape: false });
+      index = closeIndex + 3;
+    } else if (beginWith("{{")) {
+      const closeIndex = find("}}");
+      const id = template.substring(index + 2, closeIndex);
+      tokens.push({ kind: "variable", id, escape: true });
+      index = closeIndex + 2;
+    } else {
+      throw new Error();
+    }
   }
-}
 
-// class Variable {
-//   readonly name: string;
-//   readonly escape: boolean;
-
-//   constructor() {
-//     //
-//   }
-// }
+  return tokens;
+};

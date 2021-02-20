@@ -1,1 +1,1 @@
-export { sayHello, sayGoodbye } from "./funcs";
+export { sayHello, sayGoodbye, sayGoodbye2, compile } from "./funcs";

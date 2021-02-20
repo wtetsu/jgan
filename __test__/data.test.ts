@@ -1,5 +1,4 @@
-import Hogan from "hogan.js";
-import { sayHello, sayGoodbye, tokenize } from "../src/funcs";
+import { sayHello, sayGoodbye, tokenize, compile } from "../src/funcs";
 
 test("", () => {
   expect("aaa").toEqual("aaa");
@@ -11,17 +10,6 @@ test("", () => {
 
 test("", () => {
   expect("goodbye").toEqual(sayGoodbye());
-});
-
-test("", () => {
-  // const text = "my {{_foo}}example{{/foo}} template.";
-  // Hogan.compile(text, { sectionTags: [{ o: "_foo", c: "foo" }] });
-
-  const text = "my <%example%> template.";
-  const template = Hogan.compile(text, { delimiters: "<% %>" }) as any;
-  const r = template.render({ example: "aaaaaaaa" });
-
-  expect("my aaaaaaaa template.").toEqual(r);
 });
 
 // test("", () => {
@@ -39,97 +27,18 @@ test("", () => {
 // });
 
 test("", () => {
-  const text = "my {{_foo}}example{{/foo}} template";
-  const t = Hogan.compile(text, { sectionTags: [{ o: "_foo", c: "foo" }] }) as any;
-
-  const r = t.render({ example: 1 });
-
-  expect("my  template").toEqual(r);
-});
-
-test("", () => {
-  const text = "my <%example%> template.";
-  const template = Hogan.compile(text, { delimiters: "<% %>" }) as any;
-  const r = template.render({ example: "aaaaaaaa" });
-
-  expect("my aaaaaaaa template.").toEqual(r);
-});
-
-test("", () => {
-  const text = `{{#people}}{{firstname}}{{/people}}`;
-  const t = Hogan.compile(text, { sectionTags: [{ o: "_foo", c: "foo" }] }) as any;
-
-  const data = {
-    people: [
-      {
-        firstname: "Nils",
-        lastname: "Knappmeier",
-      },
-      {
-        firstname: "Yehuda",
-        lastname: "Katz",
-      },
-    ],
-  };
-
-  const r = t.render(data);
-
-  expect("NilsYehuda").toEqual(r);
-});
-
-test("", () => {
-  const text = `{{#depts}}{{#people}}{{  name  }}:{{firstname}},{{/people}}{{/depts}}`;
-  const t = Hogan.compile(text, { sectionTags: [{ o: "_foo", c: "foo" }] }) as any;
-
-  const data = {
-    depts: [
-      {
-        name: "Aaa",
-        people: [
-          {
-            firstname: "Nils",
-            lastname: "Knappmeier",
-          },
-          {
-            firstname: "Yehuda",
-            lastname: "Katz",
-          },
-        ],
-      },
-      {
-        name: "Bbb",
-        people: [
-          {
-            firstname: "Nils",
-            lastname: "Knappmeier",
-          },
-          {
-            firstname: "Yehuda",
-            lastname: "Katz",
-          },
-        ],
-      },
-    ],
-  };
-
-  const r = t.render(data);
-
-  expect("Aaa:Nils,Aaa:Yehuda,Bbb:Nils,Bbb:Yehuda,").toEqual(r);
-});
-
-test("", () => {
   {
     const tokens = tokenize("");
-    expect(0).toEqual(tokens.length);
+    expect(tokens.length).toEqual(0);
   }
 
   {
     const tokens = tokenize("aaaa");
-    expect(1).toEqual(tokens.length);
+    expect(tokens.length).toEqual(1);
 
     if (tokens[0].kind !== "raw_text") throw Error();
-    expect("raw_text").toEqual(tokens[0].kind);
-    expect("aaaa").toEqual(tokens[0].text);
+    expect(tokens[0].kind).toEqual("raw_text");
+    expect(tokens[0].text).toEqual("aaaa");
   }
 
   {
@@ -137,15 +46,20 @@ test("", () => {
     expect(3).toEqual(tokens.length);
 
     if (tokens[0].kind !== "raw_text") throw Error();
-    expect("raw_text").toEqual(tokens[0].kind);
-    expect("aaaa").toEqual(tokens[0].text);
+    expect(tokens[0].kind).toEqual("raw_text");
+    expect(tokens[0].text).toEqual("aaaa");
 
     if (tokens[1].kind !== "variable") throw Error();
-    expect("variable").toEqual(tokens[1].kind);
-    expect("name").toEqual(tokens[1].id);
+    expect(tokens[1].kind).toEqual("variable");
+    expect(tokens[1].id).toEqual("name");
 
     if (tokens[2].kind !== "raw_text") throw Error();
-    expect("raw_text").toEqual(tokens[2].kind);
-    expect("bbbb").toEqual(tokens[2].text);
+    expect(tokens[2].kind).toEqual("raw_text");
+    expect(tokens[2].text).toEqual("bbbb");
   }
+});
+
+test("", () => {
+  const template = compile("aaaa{{name}}bbbb");
+  expect(template.render({})).toEqual("aaaabbbb");
 });
