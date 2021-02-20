@@ -1,0 +1,15 @@
+{
+  "name": "jgan-performance-test",
+  "scripts": {
+    "run_hogan": "node test_hogan.js",
+    "run_jgan": "node test_jgan.js"
+  },
+  "dependencies": {
+    "handlebars": "^4.7.7",
+    "hogan.js": "^3.0.2"
+  },
+  "devDependencies": {
+    "@types/hogan.js": "^3.0.0",
+    "ts-node": "^9.1.1"
+  }
+}

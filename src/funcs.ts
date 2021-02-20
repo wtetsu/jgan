@@ -5,11 +5,11 @@
 
 export function sayHello() {
   // console.log("hi");
-  return "hi!";
+  return "hi";
 }
 export function sayGoodbye() {
   // console.log("goodbye");
-  return "goodbye!";
+  return "goodbye";
 }
 
 export function sayGoodbye2() {
@@ -138,7 +138,12 @@ type Token =
       kind: "open2";
     };
 
-// type TokenKind = Token["kind"];
+type TokenKind = Token["kind"];
+
+type Capture = {
+  token: Token;
+  next: number;
+};
 
 export const tokenize = (template: string): Token[] => {
   let index = 0;
@@ -149,6 +154,22 @@ export const tokenize = (template: string): Token[] => {
   const find = (tokenString: string) => {
     const closeTokenIndex = template.indexOf(tokenString, index);
     return closeTokenIndex >= 0 ? closeTokenIndex : -1;
+  };
+
+  const captureToken = (close: string) => {
+    const closeIndex = find(close);
+    if (closeIndex < 0) {
+      throw new Error(template);
+    }
+    const id = template.substring(index + close.length, closeIndex);
+    const next = closeIndex + close.length;
+    return { id, next };
+  };
+
+  const captureVariableToken = (close: string, escape: boolean): Capture => {
+    const r = captureToken(close);
+    const token: Token = { kind: "variable", id: r.id, escape };
+    return { next: r.next, token };
   };
 
   const tokens: Token[] = [];
@@ -173,15 +194,15 @@ export const tokenize = (template: string): Token[] => {
     }
 
     if (beginWith("{{{")) {
-      const closeIndex = find("}}}");
-      const id = template.substring(index + 3, closeIndex);
-      tokens.push({ kind: "variable", id, escape: false });
-      index = closeIndex + 3;
+      const r = captureVariableToken("}}}", false);
+      tokens.push(r.token);
+      index = r.next;
+    } else if (beginWith("{{#")) {
+      //
     } else if (beginWith("{{")) {
-      const closeIndex = find("}}");
-      const id = template.substring(index + 2, closeIndex);
-      tokens.push({ kind: "variable", id, escape: true });
-      index = closeIndex + 2;
+      const r = captureVariableToken("}}", true);
+      tokens.push(r.token);
+      index = r.next;
     } else {
       throw new Error();
     }
