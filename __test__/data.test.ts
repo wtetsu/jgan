@@ -73,7 +73,7 @@ test("", () => {
   expect(template.render({ name: "<script>" })).toEqual("aaaa<script>bbbb");
 });
 
-// test("", () => {
+// test("", () => {Rational
 //   const template = compile("aaaa{{#users}}Hello!{{/users}}bbbb");
 //   expect(template.render({})).toEqual("aaaabbbb");
 //   expect(template.render({ name: 123 })).toEqual("aaaa123bbbb");

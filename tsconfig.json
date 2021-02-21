@@ -7,7 +7,7 @@
     "importHelpers": false,
     "noImplicitAny": true,
     "esModuleInterop": true,
-    "noUnusedLocals": true,
+    // "noUnusedLocals": true,
     "sourceMap": true,
     "declarationMap": true,
     "noEmit": true,
@@ -15,5 +15,5 @@
     "module": "esnext",
     "allowJs": true
   },
-  "files": ["./src/index.ts"]
+  "files": ["./src/jgan.ts"]
 }

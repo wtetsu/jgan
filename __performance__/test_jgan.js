@@ -4,7 +4,7 @@ const test01 = () => {
   const templateText = `firstName:{{firstName}}, lastName:{{lastName}}`;
   const data = {
     firstName: "Nils",
-    lastName: "Knappmeier",
+    lastName: "<b>GitHub</b>",
   };
 
   const compiledTemplate = Jgan.compile(templateText);

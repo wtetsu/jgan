@@ -2,6 +2,9 @@
   "name": "jgan",
   "version": "1.0.0",
   "main": "dist/index.js",
+  "module": "dist/jgan.esm.js",
+  "source": "src/jgan.ts",
+  "types": "dist/jgan.d.ts",
   "license": "MIT",
   "files": [
     "dist"

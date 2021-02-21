@@ -85,7 +85,10 @@ class Template {
           continue;
         }
         if (node.escape) {
-          result += escapeHtml(value.toString());
+          // result += hoganEscape(value.toString());
+          // result += escapeHtml3(value.toString());
+          // result += fastReplace(value.toString());
+          result += fastReplace2(value.toString());
         } else {
           result += value.toString();
         }
@@ -144,7 +147,7 @@ type Token =
       id: string;
     };
 
-type TokenKind = Token["kind"];
+// type TokenKind = Token["kind"];
 
 type Capture = {
   token: Token;
@@ -246,4 +249,134 @@ const reForEscapeHtml = /&|<|>|"/g;
 
 const escapeHtml = (str: string) => {
   return str.replace(reForEscapeHtml, (ch: string) => mapForEscapeHtml[ch]);
+};
+
+var rAmp = /&/g,
+  rLt = /</g,
+  rGt = />/g,
+  rApos = /\'/g,
+  rQuot = /\"/g,
+  hChars = /[&<>\"\']/;
+
+function hoganEscape(str: string) {
+  return hChars.test(str) ? str.replace(rAmp, "&amp;").replace(rLt, "&lt;").replace(rGt, "&gt;").replace(rApos, "&#39;").replace(rQuot, "&quot;") : str;
+}
+
+const map = new Map([
+  ["&", "&amp;"],
+  ["<", "&lt;"],
+  [">", "&gt;"],
+  ["'", "&#39;"],
+]);
+
+const ch1 = "&".charCodeAt(0);
+const ch2 = "<".charCodeAt(0);
+const ch3 = ">".charCodeAt(0);
+const ch4 = "'".charCodeAt(0);
+
+const map2 = new Map<number, string>([
+  [ch1, "&amp;"],
+  [ch2, "&lt;"],
+  [ch3, "&gt;"],
+  [ch4, "&#39;"],
+]);
+
+const escapeHtml3 = (str: string) => {
+  if (!hChars.test(str)) {
+    return str;
+  }
+  let result = "";
+
+  let startIndex = 0;
+  const len = str.length;
+  for (let i = 0; i < len; i++) {
+    const code = str.charCodeAt(i);
+    if (!(code == ch1 || code == ch2 || code == ch3 || code == ch4)) {
+      continue;
+    }
+    result += str.substring(startIndex, i);
+    result += map2.get(code);
+    startIndex = i + 1;
+    // const code = str.charCodeAt(i);
+    // if (!(code == ch1 || code == ch2 || code == ch3 || code == ch4)) {
+    //   continue;
+    // }
+    // result += str.substring(startIndex, i);
+    // result += map2.get(code);
+    // startIndex = i + 1;
+
+    // const n = map.get(str[i]);
+    // if (n) {
+    //   result += str.substring(startIndex, i);
+    //   result += n;
+    //   startIndex = i + 1;
+    // }
+  }
+  result += str.substring(startIndex);
+  return result;
+};
+
+const map3: string[] = [];
+for (let i = 0; i < 255; i++) {
+  map3.push("");
+}
+map3[38] = "&amp;";
+map3[60] = "&lt;";
+map3[62] = "&gt;";
+map3[39] = "&#39;";
+
+const fastReplace = (str: string) => {
+  const replaces: [number, string][] = [];
+
+  const len = str.length;
+  for (let i = 0; i < len; i++) {
+    const code = str.charCodeAt(i);
+    const r = map3[code];
+    if (!r) {
+      continue;
+    }
+    replaces.push([i, r]);
+  }
+
+  if (replaces.length == 0) {
+    return str;
+  }
+
+  let result = "";
+
+  let lastIndex = 0;
+  for (let i = 0; i < replaces.length; i++) {
+    const r = replaces[i];
+
+    result += str.substring(lastIndex, r[0]);
+    result += r[1];
+    lastIndex = r[0] + 1;
+  }
+
+  result += str.substring(lastIndex);
+
+  return result;
+};
+
+const fastReplace2 = (str: string) => {
+  const replaces: string[] = [];
+
+  let lastIndex = 0;
+
+  const len = str.length;
+  for (let i = 0; i < len; i++) {
+    const code = str.charCodeAt(i);
+    const r = map3[code];
+    if (!r) {
+      continue;
+    }
+
+    replaces.push(str.substring(lastIndex, i));
+    replaces.push(r);
+    lastIndex = i + 1;
+  }
+
+  replaces.push(str.substring(lastIndex));
+
+  return replaces.join("");
 };
