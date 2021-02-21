@@ -87,8 +87,9 @@ class Template {
         if (node.escape) {
           // result += hoganEscape(value.toString());
           // result += escapeHtml3(value.toString());
-          // result += fastReplace(value.toString());
-          result += fastReplace2(value.toString());
+          result += fastReplace(value.toString());
+          // result += fastReplace2(value.toString());
+          // result += fastReplace3(value.toString());
         } else {
           result += value.toString();
         }
@@ -358,6 +359,40 @@ const fastReplace = (str: string) => {
   return result;
 };
 
+const fastReplaceC = (str: string) => {
+  const replaces: [number, string][] = [];
+
+  const len = str.length;
+  for (let i = 0; i < len; i++) {
+    const code = str.charCodeAt(i);
+    const r = map3[code];
+    if (!r) {
+      continue;
+    }
+    replaces.push([i, r]);
+  }
+
+  if (replaces.length == 0) {
+    return str;
+  }
+
+  const result = new Array(10);
+
+  let lastIndex = 0;
+  let index = 0;
+  for (let i = 0; i < replaces.length; i++) {
+    const r = replaces[i];
+
+    result[index++] = str.substring(lastIndex, r[0]);
+    result[index++] = r[1];
+    lastIndex = r[0] + 1;
+  }
+
+  result[index++] = str.substring(lastIndex);
+
+  return "";
+};
+
 const fastReplace2 = (str: string) => {
   const replaces: string[] = [];
 
@@ -377,6 +412,26 @@ const fastReplace2 = (str: string) => {
   }
 
   replaces.push(str.substring(lastIndex));
-
   return replaces.join("");
+};
+
+const fastReplace3 = (str: string) => {
+  let result = "";
+
+  let lastIndex = 0;
+  const len = str.length;
+  for (let i = 0; i < len; i++) {
+    const code = str.charCodeAt(i);
+    const r = map3[code];
+    if (!r) {
+      continue;
+    }
+    result += str.substring(lastIndex, i);
+    result += r;
+    lastIndex = i + 1;
+  }
+
+  result += str.substring(lastIndex);
+
+  return result;
 };
